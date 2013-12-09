@@ -67,4 +67,6 @@ Benchpress 'Async benchmark': 126432 ops/sec (300 iterations)
 Run complete.
 ```
 
+-----
+
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/mariocasciaro/benchpress/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
