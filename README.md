@@ -54,7 +54,7 @@ suite
     //specify iterations per benchmark
     iterations: 300
   })
-  //don't dorget to run the suite!!!
+  //don't forget to run the suite!!!
   .run();
 
 ```
