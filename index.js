@@ -1,7 +1,6 @@
 
 var async = require('async'),
-  ProgressBar = require('progress'),
-  microtime = require('microtime');
+  ProgressBar = require('progress');
 
 function Benchpress(options) {
   options = options || {};
@@ -11,16 +10,33 @@ function Benchpress(options) {
 }
 
 Benchpress.prototype._resetProfiler = function() {
-  this.timeAccumulator = 0;
+  this.timeAccumulator = [0, 0];
 };
 
 Benchpress.prototype._startProfiler = function() {
-  this.lastTiming = microtime.nowDouble();
+  this.lastTiming = process.hrtime();
 };
 
 Benchpress.prototype._stopProfiler = function() {
-  var now = microtime.nowDouble();
-  this.timeAccumulator += (now - this.lastTiming);
+  var diff = process.hrtime(this.lastTiming);
+  
+  var sumSecs = diff[0] + this.timeAccumulator[0];
+  var sumNano = diff[1] + this.timeAccumulator[1];
+  if(sumNano >= 1e9) {
+    sumSecs++;
+    sumNano -= 1e9;
+
+    //precision problems?
+    if(sumNano <= 0) {
+      sumNano = 0;
+    }
+  }
+  
+  this.timeAccumulator = [sumSecs, sumNano];
+};
+
+Benchpress.prototype._getTimingMicroseconds = function() {
+  return (this.timeAccumulator[1] / 1e3) + (this.timeAccumulator[0] * 1e6);
 };
 
 Benchpress.prototype.run = function(done) {
@@ -28,20 +44,30 @@ Benchpress.prototype.run = function(done) {
   
   console.log("Starting suite.");
   async.eachSeries(this.benchmarks, function(bench, done) {
-    var bar = new ProgressBar("Running '" + bench.name + "' [:bar] :percent :etas ", {
+    bench.progress = new ProgressBar("Running '" + bench.name + "' [:bar] :percent :etas ", {
       complete: '=',
       incomplete: ' ',
       width: 20,
       total: bench.iterations,
       clear: true
     });
-    bench.progress = bar;
+    
     self.runBenchmark(bench, function(err) {
       if(err) {
         console.log("There was an error: " + (err.stack || err));
       } else {
-        console.log(bench.name + ': ' + Math.round(bench.iterations / self.timeAccumulator)  + 
-          " ops/sec ("+bench.iterations+" iterations)");
+        var timing = self._getTimingMicroseconds();
+        var opsSec = Math.round((bench.iterations / timing) * 1e6);
+        var mean = timing / bench.iterations;
+        if(mean > 1e6) {
+          mean = Math.round(mean / 1e6) + " seconds";
+        } else if(mean > 1e3) {
+          mean = Math.round(mean / 1000) + " ms";
+        } else {
+          mean = Math.round(mean) + " microseconds";
+        }
+        console.log(bench.name + ': ' + opsSec + 
+          " ops/sec ("+bench.iterations+" iterations, mean "+  mean + ")");
       }
       done();
     });
@@ -54,7 +80,8 @@ Benchpress.prototype.run = function(done) {
 
 Benchpress.prototype.runBenchmark = function(bench, done) {
   var self = this;
-
+  self._resetProfiler();
+  
   async.series([
     function(done){
       if(!bench.beforeAll) return done();
@@ -80,7 +107,6 @@ Benchpress.prototype.runBenchmark = function(bench, done) {
             },
             function(done) {
               if(!bench.fn) return done("Must provide a function to benchmark for test '" + bench.name + "'");
-              self._resetProfiler();
               if(bench.fn.length === 0) {
                 self._startProfiler();
                 bench.fn();
