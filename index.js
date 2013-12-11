@@ -73,39 +73,41 @@ Benchpress.prototype.run = function(done) {
     });
   }, function(err) {
     console.log("Run complete");
-    done(err);
+    if(done) {
+      done(err);
+    } else if(err){
+      console.error(err.stack || err);
+    }
   });
 };
 
+Benchpress.prototype._runSyncOrAsync = function(foo, done) {
+  async.setImmediate(function() {
+    if(!foo) return done();
+    if(foo.length === 0) {
+      foo();
+      done();
+    } else {
+      foo(done);
+    }
+  });
+};
 
 Benchpress.prototype.runBenchmark = function(bench, done) {
   var self = this;
   self._resetProfiler();
-  
   async.series([
     function(done){
-      if(!bench.beforeAll) return done();
-      if(bench.beforeAll.length === 0) {
-        bench.beforeAll();
-        done();
-      } else {
-        bench.beforeAll(done);
-      }
+      self._runSyncOrAsync(bench.beforeAll, done);
     },
     function(done){
       async.timesSeries(bench.iterations, function(n, done) {
-        async.setImmediate(function() {
-          async.series([
-            function(done) {
-              if(!bench.beforeEach) return done();
-              if(bench.beforeEach.length === 0) {
-                bench.beforeEach();
-                done();
-              } else {
-                bench.beforeEach(done);
-              }
-            },
-            function(done) {
+        async.series([
+          function(done) {
+            self._runSyncOrAsync(bench.beforeEach, done);
+          },
+          function(done) {
+            async.setImmediate(function() {
               if(!bench.fn) return done("Must provide a function to benchmark for test '" + bench.name + "'");
               if(bench.fn.length === 0) {
                 self._startProfiler();
@@ -120,28 +122,16 @@ Benchpress.prototype.runBenchmark = function(bench, done) {
                   done(err);
                 });
               }
-            },
-            function(done) {
-              if(!bench.afterEach) return done();
-              if(bench.afterEach.length === 0) {
-                bench.afterEach();
-                done();
-              } else {
-                bench.afterEach(done);
-              }
-            }
-          ], done);
-        });
+            });
+          },
+          function(done) {
+            self._runSyncOrAsync(bench.afterEach, done);
+          }
+        ], done);
       }, done);
     },
     function(done){
-      if(!bench.afterAll) return done();
-      if(bench.afterAll.length === 0) {
-        bench.afterAll();
-        done();
-      } else {
-        bench.afterAll(done);
-      }
+      self._runSyncOrAsync(bench.afterAll, done);
     }
   ], done);
 };
