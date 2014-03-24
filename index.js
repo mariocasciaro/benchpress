@@ -57,14 +57,14 @@ Benchpress.prototype.run = function(done) {
         console.log("There was an error: " + (err.stack || err));
       } else {
         var timing = self._getTimingMicroseconds();
-        var opsSec = Math.round((bench.iterations / timing) * 1e6);
+        var opsSec = ((bench.iterations / timing) * 1e6).toFixed(3);
         var mean = timing / bench.iterations;
         if(mean > 1e6) {
-          mean = Math.round(mean / 1e6) + " seconds";
+          mean = (mean / 1e6).toFixed(3) + " seconds";
         } else if(mean > 1e3) {
-          mean = Math.round(mean / 1000) + " ms";
+          mean = (mean / 1000).toFixed(3) + " ms";
         } else {
-          mean = Math.round(mean) + " microseconds";
+          mean = (mean).toFixed(3) + " microseconds";
         }
         console.log(bench.name + ': ' + opsSec + 
           " ops/sec ("+bench.iterations+" iterations, mean "+  mean + ")");
