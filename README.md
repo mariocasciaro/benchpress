@@ -4,16 +4,16 @@ Synopsis
 
 No fuss benchmarking for Node.js.
 
-[![NPM](https://nodei.co/npm/benchpress.png?downloads=true)](https://nodei.co/npm/benchpress/)
+[![NPM](https://nodei.co/npm/@mariocasciaro/benchpress.png?downloads=true)](https://nodei.co/npm/@mariocasciaro/benchpress/)
 
 [![Build Status](https://travis-ci.org/mariocasciaro/benchpress.png)](https://travis-ci.org/mariocasciaro/benchpress)
-[![Dependency Status](https://david-dm.org/mariocasciaro/benchpress.png)](https://david-dm.org/mariocasciaro/benchpress) 
+[![Dependency Status](https://david-dm.org/mariocasciaro/benchpress.png)](https://david-dm.org/mariocasciaro/benchpress)
 
 
 ## Usage
 
 ```javascript
-var Benchpress = require('benchpress');
+var Benchpress = require('@mariocasciaro/benchpress');
 
 var suite = new Benchpress({
   // iterations: 1000   <--- 1000 by default
@@ -66,7 +66,3 @@ Benchmark 'Benchmark name': 374812 ops/sec (1000 iterations)
 Benchpress 'Async benchmark': 126432 ops/sec (300 iterations)
 Run complete.
 ```
-
------
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/mariocasciaro/benchpress/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
