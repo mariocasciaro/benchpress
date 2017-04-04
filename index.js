@@ -6,6 +6,7 @@ function Benchpress(options) {
   options = options || {};
   this.benchmarks = [];
   this.iterations = options.iterations || 500;
+  this.concurrency = options.concurrency || 1;
   this._resetProfiler();
 }
 
@@ -19,7 +20,7 @@ Benchpress.prototype._startProfiler = function() {
 
 Benchpress.prototype._stopProfiler = function() {
   var diff = process.hrtime(this.lastTiming);
-  
+
   var sumSecs = diff[0] + this.timeAccumulator[0];
   var sumNano = diff[1] + this.timeAccumulator[1];
   if(sumNano >= 1e9) {
@@ -31,7 +32,7 @@ Benchpress.prototype._stopProfiler = function() {
       sumNano = 0;
     }
   }
-  
+
   this.timeAccumulator = [sumSecs, sumNano];
 };
 
@@ -41,7 +42,7 @@ Benchpress.prototype._getTimingMicroseconds = function() {
 
 Benchpress.prototype.run = function(done) {
   var self = this;
-  
+
   console.log("Starting suite.");
   async.eachSeries(this.benchmarks, function(bench, done) {
     bench.progress = new ProgressBar("Running '" + bench.name + "' [:bar] :percent :etas ", {
@@ -51,7 +52,7 @@ Benchpress.prototype.run = function(done) {
       total: bench.iterations,
       clear: true
     });
-    
+
     self.runBenchmark(bench, function(err) {
       if(err) {
         console.log("There was an error: " + (err.stack || err));
@@ -66,7 +67,7 @@ Benchpress.prototype.run = function(done) {
         } else {
           mean = (mean).toFixed(3) + " microseconds";
         }
-        console.log(bench.name + ': ' + opsSec + 
+        console.log(bench.name + ': ' + opsSec +
           " ops/sec ("+bench.iterations+" iterations, mean "+  mean + ")");
       }
       done();
@@ -101,7 +102,7 @@ Benchpress.prototype.runBenchmark = function(bench, done) {
       self._runSyncOrAsync(bench.beforeAll, done);
     },
     function(done){
-      async.timesSeries(bench.iterations, function(n, done) {
+      async.timesLimit(bench.iterations, self.concurrency, function(n, done) {
         async.series([
           function(done) {
             self._runSyncOrAsync(bench.beforeEach, done);
