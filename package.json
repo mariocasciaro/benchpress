@@ -11,12 +11,12 @@
     "url": "git://github.com/mariocasciaro/benchpress.git"
   },
   "dependencies": {
-    "async": "~2.3.0",
-    "progress": "~1.1.2"
+    "async": "^3.2.4",
+    "progress": "^2.0.3"
   },
   "devDependencies": {
-    "mocha": "~1.13.0",
-    "chai": "~1.8.0"
+    "mocha": "^10.2.0",
+    "chai": "^4.3.7"
   },
   "scripts": {
     "test": "./node_modules/mocha/bin/_mocha test.js -R spec"
